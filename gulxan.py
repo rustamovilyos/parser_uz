@@ -14,22 +14,17 @@ header = {'user-agent': user}
 stop_words = ['(davomi)', 'hikoya', '(hikoya)', 'davomi bu yerda', ' Boshi bu yerda:', '(avar ertagi)',
               '(kichik badia)', 'Boshi bu yerda', 'Davomi', '(', ')'
               ]
-class_list = ['item-111', 'item-112']
+class_list = ['item-112']
 
 
 def find_stories():
     response = requests.get(link, headers=header).text
     soup = BeautifulSoup(response, 'lxml')
-    nav_menu = None
-    for class_name in class_list:
-        nav_menu = soup.find('ul', class_='nav menu mod-list').find_next(
-            'li', class_=class_name).find('a')
-        if nav_menu:
-            break
+    nav_menu = soup.find('ul', class_='nav menu mod-list').find_next(
+        'li', class_='item-112').find('a')
 
     time.sleep(1.332)
-    print(nav_menu.get('href'))
-    return nav_menu.get('href') if nav_menu else None
+    return nav_menu.get('href')
 
 
 def should_skip_text(text):
@@ -42,14 +37,16 @@ def should_skip_text(text):
 
 def clean_text(text):
     p_tag = text.find('span').find_next('p')
-    for strong_tag in p_tag.find_all(['strong', 'em']):
-        strong_tag.decompose()  # Удаляем содержимое теги <strong> <em>
+    if p_tag.find('strong') or p_tag.find('em'):
+        for strong_tag in p_tag.find_all(['strong', 'em']):
+            strong_tag.decompose()  # Удаляем содержимое теги <strong> <em>
 
-    new_tag = p_tag.get_text(strip=True)
-    print(new_tag)
-    splited_text = re.split('[.!?]', new_tag)
-    print(splited_text)
-
+        new_tag = p_tag.get_text(strip=True)
+        splited_text = re.split('[.!?:]', new_tag)
+        print(splited_text)
+        return splited_text
+    splited_text = re.split('[.!?:]', p_tag.get_text(strip=True))
+    print('1>>', splited_text)
     return splited_text
 
 
@@ -63,13 +60,13 @@ def get_story_text():
             print('404')
             continue
         except AttributeError:
-            print('ishladi')
             stories_list = go_to_story_list.find_all('div', class_='items-row')
             for links in stories_list:
                 get_story_link = links.find('div', class_='column-1').find(
-                    'a').get('href')
+                    'p', class_='readmore').find('a').get('href')
                 go_to_story = requests.get(f"{link}{get_story_link}", headers=header).text
                 enter_to_story = BeautifulSoup(go_to_story, 'lxml')
+                # go_to_fairy = requests.get(f'{link}{get_story_link}{}')
                 # story_text = enter_to_story.find('span').get_text(strip=True).split('.')
                 cleaned_story_text = clean_text(enter_to_story)
                 # print('cleaned_story_text', cleaned_story_text)
