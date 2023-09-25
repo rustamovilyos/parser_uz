@@ -1,7 +1,7 @@
 import csv
 import re
 import os
-
+from fitrat import Transliterator, WritingType
 from PyPDF2 import PdfReader
 
 
@@ -39,7 +39,6 @@ def extract_text_from_pdf():
         text = ''.join(parts)
         new_splited = re.split("[.?!:]", text.replace(" \n", "").replace("  ", " "))
         sentences.append(new_splited)
-    print(sentences)
     return sentences
         # for sentence in sentences:
         #     print(sentence)
@@ -61,8 +60,10 @@ def write_to_csv(list_text: list):
                         if len(each_sentence) == 0:
                             continue
                         else:
+                            t = Transliterator(to=WritingType.LAT)
+                            result = t.convert(each_sentence)
                             writers.writerow(
-                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": each_sentence})
+                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
         else:
             with open(file_exist, 'a+', newline='') as ebook:
                 fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
@@ -73,7 +74,9 @@ def write_to_csv(list_text: list):
                         if len(each_sentence) == 0:
                             continue
                         else:
-                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": new_text})
+                            t = Transliterator(to=WritingType.LAT)
+                            result = t.convert(each_sentence)
+                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
 
 
 write_to_csv(extract_text_from_pdf())
