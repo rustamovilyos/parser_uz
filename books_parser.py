@@ -3,6 +3,7 @@ import re
 from PyPDF2 import PdfReader
 from fitrat import Transliterator, WritingType
 import csv
+from pdf2img import pdf2img2txt
 
 extended = []
 
@@ -15,6 +16,8 @@ def check_to_img(file_path):
             print(f"checking to image {page}")
             if reader.pages[page].images:
                 print(f"Page {page + 1} has images")
+                # ImageToText(reader.pages[page])
+                DocumentReader(pdf2img2txt(file_path))
                 DocumentReader(reader.pages[page])
             else:
                 print(f"Page {page + 1} has no images")
@@ -273,7 +276,7 @@ class DocumentSaver:
 
 if __name__ == '__main__':
     # Запуск с класса Проверки на изображение
-    book_path = "books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров-1-4.pdf"
+    book_path = "books/Одил Ёқубов Улуғбек ҳазинаси-1-6.pdf"
     # second_file_path = "Alisher Navoiy. Badoyi' ul-bidoya-1-2.pdf"
     parser = CheckFirstToImg(book_path)
     # second_parser = CheckFirstToImg(second_file_path)
