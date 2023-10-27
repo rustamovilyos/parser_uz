@@ -1,9 +1,9 @@
 import os
 import re
+
 from PyPDF2 import PdfReader
 from fitrat import Transliterator, WritingType
 import csv
-from pdf2img import pdf2img2txt
 
 extended = []
 
@@ -16,8 +16,6 @@ def check_to_img(file_path):
             print(f"checking to image {page}")
             if reader.pages[page].images:
                 print(f"Page {page + 1} has images")
-                # ImageToText(reader.pages[page])
-                DocumentReader(pdf2img2txt(file_path))
                 DocumentReader(reader.pages[page])
             else:
                 print(f"Page {page + 1} has no images")
@@ -58,39 +56,6 @@ class DocumentReader:
         # print(f"extract_text_from_pdf: {self.text}")
 
 
-def organize_text(sentences):
-    for index, words in enumerate(sentences):
-        # TranslateToLatin(words)
-        res = TranslateToLatin().split_words(words)
-        extended.append(res)
-        # print(f"organize_text: {res}")
-    return extended
-
-
-def remove_spaces(sentences):
-    # print(f"remove_spaces: {len(sentences)}")
-    remove_spaces_lines = []
-    for line_index in range(len(sentences)):  # Индексуем список
-        # print(f"remove_spaces_line_index: {line_index}")
-        for lines in sentences[line_index]:  # Выводим из списка (str)
-            # print(f"remove_spaces_lines: {lines}")
-            words = lines.split(' ')  # Обрезаем пробелы, отделяем слова друг от друга
-            # print(f"remove_spaces_words: {words}")
-            if words[0] == '':  # Если, первый идекс пукстой, то отделяем от массива.
-                without_empty_sen = organize_text(words[1:])
-                for a in without_empty_sen:
-                    if a not in remove_spaces_lines:
-                        remove_spaces_lines.append(without_empty_sen)
-            else:
-                sen = organize_text(words)
-                for a in sen:
-                    if a not in remove_spaces_lines:
-                        remove_spaces_lines.append(sen)
-
-    # Дорабатываем исправление текста внутри массива, добавляем искоючение if, elif, else:
-    # print(f"remove_spaces_lines: {remove_spaces_lines}")
-
-
 class DocumentParser:
     def __init__(self, text):
         self.text = text
@@ -125,11 +90,45 @@ class DocumentParser:
 
         # Записываем, новые предложения, в общий массив.
         new_sentences = [[sentence] for sentence in sentences_with_delimiters]
-        # print(f"removed sentences: {remove_spaces(new_sentences)}")
-        return remove_spaces(new_sentences)
+        # print(f"removed sentences: {self.remove_spaces(new_sentences)}")
+        return self.remove_spaces(new_sentences)
+
         # print(new_sentences)
 
-        # Исправление и упорядочение текста внутри массива new_sentences, что бы избежать ошибок.
+    def remove_spaces(self, sentences):
+        remove_spaces_lines = []
+        # print(f"remove_spaces: {len(sentences)}")
+        for line_index in range(len(sentences)):  # Индексуем список
+            # print(f"remove_spaces_line_index: {line_index}")
+            for lines in sentences[line_index]:  # Выводим из списка (str)
+                # print(f"remove_spaces_lines: {lines}")
+                words = lines.split(' ')  # Обрезаем пробелы, отделяем слова друг от друга
+                # print(f"remove_spaces_words: {words}")
+                if words[0] == '':  # Если, первый идекс пукстой, то отделяем от массива.
+                    self.organize_text(words[1:])
+                    # without_empty_sen = organize_text(words[1:])
+                    # for a in without_empty_sen:
+                    #     if a not in remove_spaces_lines:
+                    # remove_spaces_lines.append(self.organize_text(words[1:]))
+                else:
+                    self.organize_text(words)
+                    # sen = organize_text(words)
+                    # for a in sen:
+                    #     if a not in remove_spaces_lines:
+                    # remove_spaces_lines.append(self.organize_text(words))
+
+        return remove_spaces_lines
+
+    def organize_text(self, sentences):
+        for index, words in enumerate(sentences):
+            # TranslateToLatin(words)
+            if len(words) == 0 or words == " " or words == "" or words is None:
+                continue
+            else:
+                res = TranslateToLatin().split_words(words)
+                extended.append(res)
+
+        # return res
 
 
 # Переводит с кириллицы на латиницу:
@@ -202,24 +201,27 @@ class JoinToStr:
         self.text_list = None
         self.extended_str = ''
 
-    def joinded(self):
+    def joined(self):
         # newlist = []
         try:
-            self.extended_str = ' '.join(' '.join(l) for l in extended)
-            # print(self.extended_str)
-            # for i in self.extended_str:
-            #   self.newlist = self.extended_str.split('|')
-            #   # self.newlist.append(i)
-            # print(self.newlist)
-
+            # print(f"JoinToStr: {extended}")
+            for a in extended:
+                if a is None:
+                    continue
+                else:
+                    self.extended_str += ' ' + ''.join(a)
+            #
             DocumentSaver(self.extended_str)
+            print(f"DocumentSaver: {self.extended_str}")
         except Exception as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
             if str(e) == "string index out of range":
                 self.text_list.append(self.extended_str)
+            print(e)
 
 
 # Класс сохранения в csv формате.
 def write_to_csv(list_text: list):
+    # list_text = list_text.split('.')
     reader = PdfReader("books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf")
     check_file_exist = os.path.exists("data/e-book.csv")
     file_for_write = "data/e-book.csv"
@@ -243,9 +245,10 @@ def write_to_csv(list_text: list):
                     try:
                         result = new_text
                         writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                        # print(result)
+                        print(f"if 1 done {result}")
                     except IndexError:
                         writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                        print(f"if 2 done {result}")
     else:
         # print(list_text)
         with open(file_for_write, 'a+', newline='') as ebook:
@@ -263,8 +266,10 @@ def write_to_csv(list_text: list):
                         result = new_text
                         # print(result)
                         writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                        print(f"else 1 done {result}")
                     except IndexError:
                         writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                        print(f"else 2 done {result}")
 
 
 class DocumentSaver:
@@ -276,8 +281,8 @@ class DocumentSaver:
 
 if __name__ == '__main__':
     # Запуск с класса Проверки на изображение
-    book_path = "books/Одил Ёқубов Улуғбек ҳазинаси-1-6.pdf"
+    book_path = "books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf"
     # second_file_path = "Alisher Navoiy. Badoyi' ul-bidoya-1-2.pdf"
     parser = CheckFirstToImg(book_path)
     # second_parser = CheckFirstToImg(second_file_path)
-    JoinToStr().joinded()
+    JoinToStr().joined()
