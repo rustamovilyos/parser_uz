@@ -1,3 +1,4 @@
+import glob
 import os
 import re
 
@@ -27,7 +28,7 @@ def image_to_string(img_path):
 
     splitted_text = ''.join(splitted_list)
 
-    print(splitted_text)
+    # print(splitted_text)
 
     return splitted_text
 
@@ -41,8 +42,8 @@ def all_images_to_string(imgs_path):
             continue
         else:
             collector_list.append(result_text)
-        print(f"Page {i} done successfully!\n")
+        # print(f"Page {i} done successfully!\n")
 
     all_text = ''.join(collector_list)
-
+    # print(f"final extracted text from images: {all_text}")
     return all_text
