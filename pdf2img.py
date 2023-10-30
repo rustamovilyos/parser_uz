@@ -10,7 +10,6 @@ from image_parser import all_images_to_string
 def pdf2img2txt(pdf_path):
     # Convert PDF to a list of image objects
     images = convert_from_path(pdf_path)
-    print(images)
     images_path = 'Pdf2img'
     # Loop through the images and save them
     for i, image in enumerate(images):
@@ -23,7 +22,7 @@ def pdf2img2txt(pdf_path):
 
     return all_images_to_string(images_path)
 
-pdf2img2txt('books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf')
+# pdf2img2txt('books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf')
 
 def check_to_img(file_path):
     reader = PdfReader(file_path)

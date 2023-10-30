@@ -5,21 +5,36 @@ from PyPDF2 import PdfReader
 from fitrat import Transliterator, WritingType
 import csv
 
+from pdf2image import convert_from_path
+
+from image_parser import all_images_to_string, image_to_string
+
 extended = []
 
 
 # Класс для проверки на изображение (только первая страница)
 def check_to_img(file_path):
     reader = PdfReader(file_path)
+    image_path = "Pdf2img"
+    collector_list = []
     try:
         for page in range(len(reader.pages)):
-            print(f"checking to image {page}")
+            print(f"checking to image {page + 1}")
             if reader.pages[page].images:
-                print(f"Page {page + 1} has images")
+                images = convert_from_path(file_path)
+                [image.save(f'{image_path}/Page_{i + 1}.jpg', 'JPEG') for i, image in enumerate(images)]
+                result_text = image_to_string(f"{image_path}/Page_{page + 1}.jpg")
+                if len(result_text) == 0 or result_text == "":
+                    continue
+                else:
+                    collector_list.append(result_text)
+                # print(f"Page {page + 1} has images")
                 DocumentReader(reader.pages[page])
             else:
                 print(f"Page {page + 1} has no images")
                 DocumentReader(reader.pages[page])
+        all_text = ''.join(collector_list)
+        DocumentParser(all_text)
     except Exception as e:
         print(e)
 
@@ -27,7 +42,7 @@ def check_to_img(file_path):
 class CheckFirstToImg:
     def __init__(self, file_path):
         self.file_path = file_path
-        print(f"CheckFirstToImg: {self.file_path}")
+        # print(f"CheckFirstToImg: {self.file_path}")
         self.check = ''
 
         check_to_img(self.file_path)
@@ -212,7 +227,7 @@ class JoinToStr:
                     self.extended_str += ' ' + ''.join(a)
             #
             DocumentSaver(self.extended_str)
-            print(f"DocumentSaver: {self.extended_str}")
+            # print(f"DocumentSaver: {self.extended_str}")
         except Exception as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
             if str(e) == "string index out of range":
                 self.text_list.append(self.extended_str)
@@ -222,54 +237,58 @@ class JoinToStr:
 # Класс сохранения в csv формате.
 def write_to_csv(list_text: list):
     # list_text = list_text.split('.')
-    reader = PdfReader("books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf")
+    # reader = PdfReader("books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf")
     check_file_exist = os.path.exists("data/e-book.csv")
+    books_title_dir = os.listdir("books/fixed_books")
     file_for_write = "data/e-book.csv"
-    poem_title = reader.pages[0].extract_text(0).split('\n')[0]
+
+    books_list_dir = os.listdir('books/fixed_books')
+    for i in range(len(books_list_dir)):
+        poem_title = os.path.basename(books_list_dir[i][:-4])
     # print(list_text)
 
-    if check_file_exist:
-        with open(file_for_write, 'a+', newline='') as ebook:
-            fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
-            writers = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
-            writers.writeheader()
+        if check_file_exist:
+            with open(file_for_write, 'a+', newline='') as ebook:
+                fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
+                writers = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
+                writers.writeheader()
 
-            for new_text in list_text:
-                if len(new_text) == 0 or new_text == " " or new_text == "":
-                    continue
-                # for each_sentence in new_text:
-                #   print(each_sentence)
-                #   if not each_sentence:
-                #     continue
-                else:
-                    try:
-                        result = new_text
-                        writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                        print(f"if 1 done {result}")
-                    except IndexError:
-                        writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                        print(f"if 2 done {result}")
-    else:
-        # print(list_text)
-        with open(file_for_write, 'a+', newline='') as ebook:
-            fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
-            writer = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
-            writer.writeheader()
-            for new_text in list_text:
-                if len(new_text) == 0 or new_text == " " or new_text == "":
-                    continue
-                # for each_sentence in new_text:
-                #   if not each_sentence:
-                #     continue
-                else:
-                    try:
-                        result = new_text
-                        # print(result)
-                        writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                        print(f"else 1 done {result}")
-                    except IndexError:
-                        writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                        print(f"else 2 done {result}")
+                for new_text in list_text:
+                    if len(new_text) == 0 or new_text == " " or new_text == "":
+                        continue
+                    # for each_sentence in new_text:
+                    #   print(each_sentence)
+                    #   if not each_sentence:
+                    #     continue
+                    else:
+                        try:
+                            result = new_text
+                            writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            # print(f"if 1 done {result}")
+                        except IndexError:
+                            writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            # print(f"if 2 done {result}")
+        else:
+            # print(list_text)
+            with open(file_for_write, 'a+', newline='') as ebook:
+                fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
+                writer = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
+                writer.writeheader()
+                for new_text in list_text:
+                    if len(new_text) == 0 or new_text == " " or new_text == "":
+                        continue
+                    # for each_sentence in new_text:
+                    #   if not each_sentence:
+                    #     continue
+                    else:
+                        try:
+                            result = new_text
+                            # print(result)
+                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            print(f"else 1 done {result}")
+                        except IndexError:
+                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            # print(f"else 2 done {result}")
 
 
 class DocumentSaver:
@@ -281,8 +300,14 @@ class DocumentSaver:
 
 if __name__ == '__main__':
     # Запуск с класса Проверки на изображение
-    book_path = "books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf"
-    # second_file_path = "Alisher Navoiy. Badoyi' ul-bidoya-1-2.pdf"
-    parser = CheckFirstToImg(book_path)
+    books_list = os.listdir("books/fixed_books")
+    for book in books_list:
+        book_path = f"books/fixed_books/{book}"
+        # book_title = book[:-4]
+        parser = CheckFirstToImg(book_path)
+    # book_path = "books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf"
+    # # second_file_path = "Alisher Navoiy. Badoyi' ul-bidoya-1-2.pdf"
+    # parser = CheckFirstToImg(book_path)
     # second_parser = CheckFirstToImg(second_file_path)
-    JoinToStr().joined()
+        JoinToStr().joined()
+        print(f"Book {book} done successfully!\n")
