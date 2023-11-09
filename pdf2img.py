@@ -1,4 +1,3 @@
-import glob
 import os
 import subprocess
 
@@ -22,6 +21,7 @@ def pdf2img2txt(pdf_path):
 
     return all_images_to_string(images_path)
 
+
 # pdf2img2txt('books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf')
 
 def check_to_img(file_path):
@@ -37,9 +37,9 @@ def check_to_img(file_path):
 
 def pdf_fixer(input_pdf):
     # Имя выходного файла
-    output_pdf = input_pdf[6:-4] + "_fixed.pdf"
+    output_pdf = os.path.basename(input_pdf[:-4]) + "_fixed.pdf"
     output_pdf_1 = f'books/fixed_books/{output_pdf}'
-    print(f"Output file: {output_pdf}")
+    print(f"Output file: {output_pdf_1}")
 
     # Команда Ghostscript для обработки PDF файла и создания нового
     # gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER  -sOutputFile=output.pdf input.pdf
@@ -48,3 +48,9 @@ def pdf_fixer(input_pdf):
     # Вызов команды Ghostscript
     subprocess.run(command, capture_output=True, text=True)
     print("PDF file has been fixed")
+
+
+# pdf_fixer('books/renamed_books/Ов.pdf')
+
+# for pdf_book in glob.glob("books/renamed_books/*"):
+#     pdf_fixer(pdf_book)
