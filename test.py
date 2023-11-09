@@ -47,10 +47,25 @@
 # dict1 = ast.literal_eval(data)
 #
 # print(dict1)
-import os
+import glob
+# import os
+#
+# # import os
+# #
+# # books_list = os.listdir('books/fixed_books')
+# # for i in range(len(books_list)):
+# #     poem_title = os.path.basename(books_list[i][:-4])
+# #
+# #     print(poem_title)
+#
+#
+# # split pdf files into pages
+# # pdf_splitter.py
+#
+# o = os.listdir('books/splitted_book')
+# if "s" in o:
+#     print("in")
+# print("out")
+print(" fe".strip())
 
-books_list = os.listdir('books/fixed_books')
-for i in range(len(books_list)):
-    poem_title = os.path.basename(books_list[i][:-4])
 
-    print(poem_title)
