@@ -1,3 +1,5 @@
+import datetime
+import glob
 import os
 import re
 
@@ -8,8 +10,27 @@ import csv
 from pdf2image import convert_from_path
 
 from image_parser import all_images_to_string, image_to_string
+from pdf_splitter import pdf_splitter
 
 extended = []
+
+
+def is_latin_uzbek(text):
+    latin_uzbek_letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    for char in text:
+        if char in latin_uzbek_letters:
+            return True
+        else:
+            return False
+
+
+def is_cyrillic_uzbek(text):
+    cyrillic_uzbek_letters = "абвгғдеёжзийкқлмнопрстуфхцчшъыьэюяҳАБВГҒДЕЁЖЗИЙКҚЛМНОПРСТУФХЦЧШЪЫЬЭЮЯҲ"
+    for char in text:
+        if char in cyrillic_uzbek_letters:
+            return True
+        else:
+            return False
 
 
 # Класс для проверки на изображение (только первая страница)
@@ -19,22 +40,29 @@ def check_to_img(file_path):
     collector_list = []
     try:
         for page in range(len(reader.pages)):
-            print(f"checking to image {page + 1}")
+            print(f"parsing page {page + 1}")
             if reader.pages[page].images:
+                print(f"Page {page + 1} has images")
                 images = convert_from_path(file_path)
                 [image.save(f'{image_path}/Page_{i + 1}.jpg', 'JPEG') for i, image in enumerate(images)]
                 result_text = image_to_string(f"{image_path}/Page_{page + 1}.jpg")
-                if len(result_text) == 0 or result_text == "":
+                # print(f"result_text: {result_text}")
+                if len(result_text) == 0 or result_text == "" or result_text is None:
+                    print(f"Page {page + 1} has no text")
                     continue
                 else:
-                    collector_list.append(result_text)
+                    # collector_list.append(result_text)
+                    DocumentParser(result_text)
+                    print("page text forwarded to DocumentParser")
                 # print(f"Page {page + 1} has images")
                 DocumentReader(reader.pages[page])
+                print("page text forwarded to DocumentReader")
             else:
                 print(f"Page {page + 1} has no images")
                 DocumentReader(reader.pages[page])
-        all_text = ''.join(collector_list)
-        DocumentParser(all_text)
+                print("page text forwarded to DocumentReader 2!")
+        # all_text = ''.join(collector_list)
+        # DocumentParser(all_text)
     except Exception as e:
         print(e)
 
@@ -121,16 +149,8 @@ class DocumentParser:
                 # print(f"remove_spaces_words: {words}")
                 if words[0] == '':  # Если, первый идекс пукстой, то отделяем от массива.
                     self.organize_text(words[1:])
-                    # without_empty_sen = organize_text(words[1:])
-                    # for a in without_empty_sen:
-                    #     if a not in remove_spaces_lines:
-                    # remove_spaces_lines.append(self.organize_text(words[1:]))
                 else:
                     self.organize_text(words)
-                    # sen = organize_text(words)
-                    # for a in sen:
-                    #     if a not in remove_spaces_lines:
-                    # remove_spaces_lines.append(self.organize_text(words))
 
         return remove_spaces_lines
 
@@ -140,8 +160,13 @@ class DocumentParser:
             if len(words) == 0 or words == " " or words == "" or words is None:
                 continue
             else:
-                res = TranslateToLatin().split_words(words)
-                extended.append(res)
+                if is_latin_uzbek(words):
+                    # print("Text is already in latin")
+                    extended.append(words.strip())
+                elif is_cyrillic_uzbek(words):
+                    # print("Text is in cyrillic")
+                    res = TranslateToLatin().split_words(words.strip())
+                    extended.append(res)
 
         # return res
 
@@ -218,6 +243,7 @@ class JoinToStr:
 
     def joined(self):
         # newlist = []
+        # extended.clear()
         try:
             # print(f"JoinToStr: {extended}")
             for a in extended:
@@ -226,7 +252,8 @@ class JoinToStr:
                 else:
                     self.extended_str += ' ' + ''.join(a)
             #
-            DocumentSaver(self.extended_str)
+            # DocumentSaver(self.extended_str)
+            return self.extended_str
             # print(f"DocumentSaver: {self.extended_str}")
         except Exception as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
             if str(e) == "string index out of range":
@@ -234,80 +261,69 @@ class JoinToStr:
             print(e)
 
 
-# Класс сохранения в csv формате.
-def write_to_csv(list_text: list):
-    # list_text = list_text.split('.')
-    # reader = PdfReader("books/Ҳумоюн ва Акбар – Авлодлар довони (роман). Пиримқул Қодиров.pdf")
-    check_file_exist = os.path.exists("data/e-book.csv")
-    books_title_dir = os.listdir("books/fixed_books")
-    file_for_write = "data/e-book.csv"
-
-    books_list_dir = os.listdir('books/fixed_books')
-    for i in range(len(books_list_dir)):
-        poem_title = os.path.basename(books_list_dir[i][:-4])
-    # print(list_text)
-
-        if check_file_exist:
-            with open(file_for_write, 'a+', newline='') as ebook:
-                fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
-                writers = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
-                writers.writeheader()
-
-                for new_text in list_text:
-                    if len(new_text) == 0 or new_text == " " or new_text == "":
-                        continue
-                    # for each_sentence in new_text:
-                    #   print(each_sentence)
-                    #   if not each_sentence:
-                    #     continue
-                    else:
-                        try:
-                            result = new_text
-                            writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                            # print(f"if 1 done {result}")
-                        except IndexError:
-                            writers.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                            # print(f"if 2 done {result}")
-        else:
-            # print(list_text)
-            with open(file_for_write, 'a+', newline='') as ebook:
+if __name__ == '__main__':
+    # Запуск с класса Проверки на изображение
+    fixed_books = os.listdir("books/fixed_books/")
+    books_list = os.listdir("books/splitted_book/")
+    processed_books = set()
+    csv_file = "data/e-book.csv"
+    for book in sorted(books_list):
+        poem_title = os.path.splitext(book)[0]
+        files = glob.glob(f'Pdf2img/*')
+        for f in files:
+            os.remove(f)
+        print(len(files), "old extracted images removed")
+        book_path = f"books/splitted_book/{book}"
+        print(f"Book {book} started!\n")
+        parser = CheckFirstToImg(book_path)
+        final_text = JoinToStr().joined()
+        final_text = re.split("[.?!:]", final_text)
+        # print(f"\nfinal text: {final_text}\n\n")
+        if not os.path.exists(csv_file):
+            with open(csv_file, 'w', newline='') as ebook:
                 fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
                 writer = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
                 writer.writeheader()
-                for new_text in list_text:
-                    if len(new_text) == 0 or new_text == " " or new_text == "":
+                for new_text in final_text:
+                    new_text = new_text.strip().replace("|", "")
+                    print(f"new_text: {new_text}")
+                    if len(new_text) == 0 or new_text == " " or new_text == "" or new_text is None:
                         continue
-                    # for each_sentence in new_text:
-                    #   if not each_sentence:
-                    #     continue
                     else:
                         try:
                             result = new_text
-                            # print(result)
-                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                            print(f"else 1 done {result}")
+                            writer.writerow(
+                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            # print(f"else 1 done {result}")
                         except IndexError:
-                            writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
+                            writer.writerow(
+                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
                             # print(f"else 2 done {result}")
+        else:
+            fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
 
+            # Чтение существующих данных из CSV файла
+            existing_data = []
+            try:
+                with open(csv_file, 'r') as ebook:
+                    existing_data = list(csv.DictReader(ebook, delimiter='|'))
+            except FileNotFoundError:
+                pass  # Если файл не существует, то просто продолжаем
 
-class DocumentSaver:
-    def __init__(self, text_list):
-        self.text_list = re.split("[.?!:]", text_list)
-        # print(f"\n\n\nDocumentSaver: {self.text_list}\n\n\n")
-        write_to_csv(self.text_list)
+            # Добавление новых данных
+            with open(csv_file, 'a', newline='') as ebook:
+                writer = csv.DictWriter(ebook, fieldnames=fieldnames, delimiter='|')
 
+                for new_text in final_text:
+                    new_text = new_text.strip().replace("|", "")
+                    if len(new_text) == 0 or new_text == " " or new_text == "" or new_text is None:
+                        continue
 
-if __name__ == '__main__':
-    # Запуск с класса Проверки на изображение
-    books_list = os.listdir("books/fixed_books")
-    for book in books_list:
-        book_path = f"books/fixed_books/{book}"
-        # book_title = book[:-4]
-        parser = CheckFirstToImg(book_path)
-    # book_path = "books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf"
-    # # second_file_path = "Alisher Navoiy. Badoyi' ul-bidoya-1-2.pdf"
-    # parser = CheckFirstToImg(book_path)
-    # second_parser = CheckFirstToImg(second_file_path)
-        JoinToStr().joined()
-        print(f"Book {book} done successfully!\n")
+                    # Проверка, что новый текст не существует в существующих данных
+                    text_exists = any(new_text in existing_text['Matn'] for existing_text in existing_data)
+
+                    if not text_exists:
+                        writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": new_text})
+        print(f"{datetime.datetime.now()} - Book {book} done successfully!\n")
+    # except Exception as e:
+    #     print(e)
