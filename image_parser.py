@@ -6,8 +6,6 @@ from PIL import Image
 import pytesseract
 
 
-# print(pytesseract.image_to_string(Image.open('Page_3.jpg'), lang='uzb',
-#                                   config='--tessdata-dir /home/ilyos/Downloads/tessdata_langs/'))
 def image_to_string(img_path):
     img = Image.open(img_path)
 
