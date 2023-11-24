@@ -24,7 +24,7 @@ def pdf_splitter(path):
         with open(output_filename, 'wb') as out:
             pdf_writer.write(out)
 
-        print(f'Created: {output_filename}')
+        print(f'Created 1: {output_filename}')
 
 
 # if __name__ == '__main__':
