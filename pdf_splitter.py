@@ -8,14 +8,14 @@ def pdf_splitter(path):
     pdf = PdfReader(path)
 
     pdf_page_len = len(pdf.pages)
-    pdf_page_size = 10
+    pdf_page_size = 25
 
     for page in range(0, pdf_page_len, pdf_page_size):
         end = min(page + pdf_page_size, pdf_page_len)
 
         pdf_writer = PdfWriter()
-        for page in range(page, end):
-            pdf_writer.add_page(pdf.pages[page])
+        for new_page in range(page, end):
+            pdf_writer.add_page(pdf.pages[new_page])
 
         group_number = (page // pdf_page_size) + 1  # Номер группы
 
@@ -28,5 +28,5 @@ def pdf_splitter(path):
 
 
 # if __name__ == '__main__':
-#     path = 'books/fixed_books/Aleksandr Pushkin. Kapitan qizi_fixed.pdf'
-#     pdf_splitter(path)
+#     for pdf_book in glob.glob('books/books_to_parse/*.pdf'):
+#         pdf_splitter(pdf_book)

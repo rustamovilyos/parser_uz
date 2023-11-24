@@ -48,6 +48,8 @@
 #
 # print(dict1)
 import glob
+import os
+
 # import os
 #
 # # import os
@@ -66,6 +68,71 @@ import glob
 # if "s" in o:
 #     print("in")
 # print("out")
-print(" fe".strip())
+# print(" fe".strip())
+# from PyPDF2 import PdfReader
+#
+# pdf = PdfReader('books/splitted_book/Abdulla Qodiriy - Mehrobdan chayon_fixed_group_14.pdf')
+#
+# for i in range(len(pdf.pages)):
+#     text = pdf.pages[i].extract_text().replace('\n', '')
+#     print(text)
 
+# import fitz  # PyMuPDF
+#
+# pdf_document = "books/splitted_book/Abdulla Qodiriy - Mehrobdan chayon_fixed_group_14.pdf"
+# pdf = fitz.open(pdf_document)
+#
+# for page_number in range(len(pdf)):
+#     page = pdf.load_page(page_number)
+#
+#     text = page.get_page_images()
+#
+#     # text = text.replace('\n', ' ').replace('\x0c', '')  # Заменяем символы новой строки и форм-фид на пробел
+#     print(text)
 
+# pdf.close()
+# ----------------------------------------------------------------------------------------------------------
+# import csv
+# #
+# csv_file = 'data/e-book.csv'
+# books_list = os.listdir("books/splitted_book/")
+# exists_books = []
+# not_exists_books = []
+# for book in sorted(books_list):
+#     poem_title = os.path.splitext(book)[0]
+#     # new_text = "mistеr Xolms, mеn yurimsak emasman, ish kеtidan quvmayman, ish o’zi mеni qidirib kеladigan bo’lgani
+#     # uchun ba'zan haftalab ostona hatlab ko’chaga chiqmayman"
+#     if csv_file:
+#         with open(csv_file, 'r') as ebook:
+#             existing_data = list(csv.DictReader(ebook, delimiter='|'))
+#             # text_exists = any(new_text in existing_text['Matn'] for existing_text in existing_data)
+#             existing_title = any(poem_title in existing_title['Asar_nomi'] for existing_title in existing_data)
+#             if existing_title:
+#                 print(f"\n\nBook already exists in csv file!")
+#                 print(f"Book: {poem_title}")
+#                 exists_books.append(poem_title)
+#
+#                 pass
+#             else:
+#                 print("\n\nBook does not exist in csv file!")
+#                 print(f"Book: {poem_title}")
+#                 not_exists_books.append(poem_title)
+#
+#                 pass
+# print(f"Exists books: {len(exists_books)}")
+# print(f"Not exists books: {len(not_exists_books)}")
+
+# book = "books/splitted_book/А.Навоий. Ғазал гулзоридан 100 оташин гул_fixed_group_4.pdf"
+# poem_title = os.path.splitext(book)
+#
+# print(poem_title)
+
+# books = os.listdir("books/splitted_book/")
+# for book in sorted(books):
+#     print(book)
+    # poem_title = os.path.splitext(book)[0]
+    # print(poem_title)
+
+b = 'books/splitted_book/А.Навоий. Ғазал гулзоридан 100 оташин гул_fixed_group_4.pdf'
+
+print(os.path.basename(b)[:-4])

@@ -1,4 +1,6 @@
+import glob
 import os
+import shutil
 import subprocess
 
 from PyPDF2 import PdfReader
@@ -36,8 +38,31 @@ def check_to_img(file_path):
 
 
 def pdf_fixer(input_pdf):
-    # Имя выходного файла
-    output_pdf = os.path.basename(input_pdf[:-4]) + "_fixed.pdf"
+    reader = PdfReader("books/renamed_books/" + input_pdf)
+    try:
+        print(f"Checking {input_pdf} file to images")
+        if reader.pages[3].images:
+            print(f"PDF file {input_pdf} has images, but it is not scanned")
+            shutil.move(f"books/renamed_books/{input_pdf}", "books/fixed_images")
+            print(f"PDF {input_pdf} file with images is moved to fixed_books folder\n\n")
+        else:
+            shutil.move(f"books/renamed_books/{input_pdf}", "books/books_to_parse")
+            print(f"PDF {input_pdf} file has no images")
+            print(f"PDF {input_pdf} file is moved to fixed_books folder\n\n")
+    except NotImplementedError:
+        print("NotImplementedError")
+        shutil.move(f"books/renamed_books/{input_pdf}", "books/scanned_books")
+        print(f"PDF {input_pdf} file is scanned and moved to scanned_books folder\n\n")
+
+
+# pdf_fixer('books/renamed_books/Ов.pdf')
+
+# for pdf_book in sorted(os.listdir('books/renamed_books')):
+#     pdf_fixer(pdf_book)
+
+
+def scan_pdf_fixer(input_pdf):
+    output_pdf = os.path.basename(input_pdf)[:-4] + "_fixed.pdf"
     output_pdf_1 = f'books/fixed_books/{output_pdf}'
     print(f"Output file: {output_pdf_1}")
 
@@ -50,7 +75,7 @@ def pdf_fixer(input_pdf):
     print("PDF file has been fixed")
 
 
-# pdf_fixer('books/renamed_books/Ов.pdf')
+# scan_pdf_fixer("books/Бу дунёда ўлиб бўлмайди_group_2.pdf")
 
-# for pdf_book in glob.glob("books/renamed_books/*"):
-#     pdf_fixer(pdf_book)
+# for pdf_book in glob.glob('books/*.pdf'):
+#     scan_pdf_fixer(pdf_book)
