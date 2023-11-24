@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import glob
 import os
 import re
@@ -8,11 +8,18 @@ from fitrat import Transliterator, WritingType
 import csv
 
 from pdf2image import convert_from_path
-
-from image_parser import all_images_to_string, image_to_string
-from pdf_splitter import pdf_splitter
+import fitz
+from image_parser import image_to_string
 
 extended = []
+
+
+def logger(printing):
+    log_file = open("log.txt", "a")
+    print(str(datetime.now()) + ' ' + str(printing))
+    log_file.write(str(datetime.now()) + ' ' + str(printing) + '\n')
+    log_file.close()
+    return logger
 
 
 def is_latin_uzbek(text):
@@ -37,40 +44,35 @@ def is_cyrillic_uzbek(text):
 def check_to_img(file_path):
     reader = PdfReader(file_path)
     image_path = "Pdf2img"
-    collector_list = []
     try:
         for page in range(len(reader.pages)):
-            print(f"parsing page {page + 1}")
+            logger(f"parsing page {page + 1}")
             if reader.pages[page].images:
-                print(f"Page {page + 1} has images")
+                logger(f"Page {page + 1} has images")
                 images = convert_from_path(file_path)
                 [image.save(f'{image_path}/Page_{i + 1}.jpg', 'JPEG') for i, image in enumerate(images)]
                 result_text = image_to_string(f"{image_path}/Page_{page + 1}.jpg")
                 # print(f"result_text: {result_text}")
                 if len(result_text) == 0 or result_text == "" or result_text is None:
-                    print(f"Page {page + 1} has no text")
                     continue
                 else:
-                    # collector_list.append(result_text)
                     DocumentParser(result_text)
-                    print("page text forwarded to DocumentParser")
-                # print(f"Page {page + 1} has images")
-                DocumentReader(reader.pages[page])
-                print("page text forwarded to DocumentReader")
+                    logger("page text forwarded to DocumentParser!")
+                DocumentReader(file_path, page)
+                logger("page text forwarded to DocumentReader 1!")
             else:
-                print(f"Page {page + 1} has no images")
-                DocumentReader(reader.pages[page])
-                print("page text forwarded to DocumentReader 2!")
+                logger(f"Page {page + 1} has no images")
+                DocumentReader(file_path, page)
+                logger("page text forwarded to DocumentReader 2!")
         # all_text = ''.join(collector_list)
         # DocumentParser(all_text)
     except Exception as e:
-        print(e)
+        logger(f"Error in check_to_img: {e}")
 
 
 class CheckFirstToImg:
     def __init__(self, file_path):
         self.file_path = file_path
-        # print(f"CheckFirstToImg: {self.file_path}")
         self.check = ''
 
         check_to_img(self.file_path)
@@ -78,31 +80,43 @@ class CheckFirstToImg:
 
 # Класс для чтения pdf файла
 class DocumentReader:
-    def __init__(self, content):
-        self.text = None
-        self.content = content
+    def __init__(self, file_path, page):
+        self.text = ''
+        self.file_path = file_path
+        self.page = page
         self.parts = []
 
-        self.extract_text_from_pdf()
+        self.get_coordinates()
 
-    def visitor_body(self, pdf_text, cm, tm, fontDict, fontSize):
-        y = tm[5]
-        if 50 < y < 780:
-            self.parts.append(pdf_text)  # Построчное чтение pdf файла.
+    def pdf_convertor(self, x1, y1, x2, y2):
+        doc = fitz.open(self.file_path)
+        page = doc[self.page]
+        # Извлекаем текст из определенной области страницы
+        rect = fitz.Rect(x1, y1, x2, y2)
 
-    def extract_text_from_pdf(self):
-        self.content.extract_text(visitor_text=self.visitor_body)
+        self.parts.extend(page.get_text("text", clip=rect))
+
         self.text = ''.join(self.parts)
+        self.text = re.sub(r'\s+', ' ', self.text)
 
-        # Запуск функции парсера
         DocumentParser(self.text)
-        # print(f"extract_text_from_pdf: {self.text}")
+
+    def get_coordinates(self):
+        doc = fitz.open(self.file_path)
+        page_coord = doc[self.page]
+
+        # Координаты страницы 1:
+        # x1: 0.0, y1: 0.0, x2: 595.3200073242188, y2: 841.9199829101562
+        # x1: 0.0, y1: 0.0, x2: 324.0, y2: 515.52001953125
+        # Получение координат области страницы
+        x1, y1, x2, y2 = page_coord.rect
+
+        self.pdf_convertor(x1=x1, y1=y1 + 12, x2=x2, y2=y2 - 25)
 
 
 class DocumentParser:
     def __init__(self, text):
         self.text = text
-        # print(f"DocumentParser: {self.text}\n\n")
         # функция обрезки текста:
         self.split_text()
 
@@ -133,20 +147,13 @@ class DocumentParser:
 
         # Записываем, новые предложения, в общий массив.
         new_sentences = [[sentence] for sentence in sentences_with_delimiters]
-        # print(f"removed sentences: {self.remove_spaces(new_sentences)}")
         return self.remove_spaces(new_sentences)
-
-        # print(new_sentences)
 
     def remove_spaces(self, sentences):
         remove_spaces_lines = []
-        # print(f"remove_spaces: {len(sentences)}")
         for line_index in range(len(sentences)):  # Индексуем список
-            # print(f"remove_spaces_line_index: {line_index}")
             for lines in sentences[line_index]:  # Выводим из списка (str)
-                # print(f"remove_spaces_lines: {lines}")
                 words = lines.split(' ')  # Обрезаем пробелы, отделяем слова друг от друга
-                # print(f"remove_spaces_words: {words}")
                 if words[0] == '':  # Если, первый идекс пукстой, то отделяем от массива.
                     self.organize_text(words[1:])
                 else:
@@ -157,18 +164,14 @@ class DocumentParser:
     def organize_text(self, sentences):
         for index, words in enumerate(sentences):
             # TranslateToLatin(words)
-            if len(words) == 0 or words == " " or words == "" or words is None:
+            if len(words) == 0 or words == " " or words == "" or words is None or len(words) < 6:
                 continue
             else:
                 if is_latin_uzbek(words):
-                    # print("Text is already in latin")
                     extended.append(words.strip())
                 elif is_cyrillic_uzbek(words):
-                    # print("Text is in cyrillic")
                     res = TranslateToLatin().split_words(words.strip())
                     extended.append(res)
-
-        # return res
 
 
 # Переводит с кириллицы на латиницу:
@@ -187,7 +190,7 @@ class TranslateToLatin:
 
     def split_words(self, word):
         try:
-            if word == '' or word == [] or len(word) == 0:
+            if word == '' or word == [] or len(new_text) < 5:
                 pass
             else:
                 # for word in text:  # Цикл с условием если слово путой str, то это слово пропускают
@@ -214,6 +217,7 @@ class TranslateToLatin:
                         except Exception as e:  # При возникновении ошибки: легче сделать так дэ.
                             new_word = f'{word[:1]}{self.t.convert(word[1:-1])}{word[-1:]}'
                             self.text_list.append(new_word)
+                            logger(f"Error in split_words: {e}")
                     else:  # Если первый индекс слова, не буква, то принтуем в терминал,
                         self.text_list.append(word)
                 elif word[0].isdigit():  # Если внутри обрезанного слова есть, цифра, то находим цифру и переводим слово
@@ -226,7 +230,7 @@ class TranslateToLatin:
                             # записываем в коллектор переведенную букву.
                             translated_sym = self.t.convert(each_symbol)
                             collector_list.append(translated_sym)
-                        else:  # Если этот символ что то другое, то добавляем его в коллектор без изменений
+                        else:  # Если этот символ, что-то другое, то добавляем его в коллектор без изменений
                             collector_list.append(each_symbol)
                     collector_txt = ''.join(collector_list)  # Перевеодим слово обратно в str
                     self.text_list.append(collector_txt)  # Добавляем слово в общий список
@@ -242,8 +246,6 @@ class JoinToStr:
         self.extended_str = ''
 
     def joined(self):
-        # newlist = []
-        # extended.clear()
         try:
             # print(f"JoinToStr: {extended}")
             for a in extended:
@@ -251,34 +253,28 @@ class JoinToStr:
                     continue
                 else:
                     self.extended_str += ' ' + ''.join(a)
-            #
-            # DocumentSaver(self.extended_str)
             return self.extended_str
             # print(f"DocumentSaver: {self.extended_str}")
         except Exception as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
             if str(e) == "string index out of range":
                 self.text_list.append(self.extended_str)
-            print(e)
+            logger(f"Error in JoinToStr: {e}")
 
 
 if __name__ == '__main__':
-    # Запуск с класса Проверки на изображение
-    fixed_books = os.listdir("books/fixed_books/")
     books_list = os.listdir("books/splitted_book/")
-    processed_books = set()
     csv_file = "data/e-book.csv"
     for book in sorted(books_list):
         poem_title = os.path.splitext(book)[0]
         files = glob.glob(f'Pdf2img/*')
         for f in files:
             os.remove(f)
-        print(len(files), "old extracted images removed")
+        logger(f"{len(files)} old extracted images removed")
         book_path = f"books/splitted_book/{book}"
-        print(f"Book {book} started!\n")
+        logger(f"Book - {book} started!\n")
         parser = CheckFirstToImg(book_path)
         final_text = JoinToStr().joined()
         final_text = re.split("[.?!:]", final_text)
-        # print(f"\nfinal text: {final_text}\n\n")
         if not os.path.exists(csv_file):
             with open(csv_file, 'w', newline='') as ebook:
                 fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
@@ -286,19 +282,25 @@ if __name__ == '__main__':
                 writer.writeheader()
                 for new_text in final_text:
                     new_text = new_text.strip().replace("|", "")
-                    print(f"new_text: {new_text}")
-                    if len(new_text) == 0 or new_text == " " or new_text == "" or new_text is None:
+                    if new_text == " " or new_text == "" or new_text is None or len(new_text) < 6:
                         continue
                     else:
                         try:
                             result = new_text
                             writer.writerow(
-                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                            # print(f"else 1 done {result}")
+                                {"Asar_nomi": poem_title, "Manbaa": "ziyonet.uz", "Matn": result})
                         except IndexError:
                             writer.writerow(
-                                {"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": result})
-                            # print(f"else 2 done {result}")
+                                {"Asar_nomi": poem_title, "Manbaa": "ziyonet.uz", "Matn": result})
+                        logger(f"Book {book} already exists in csv file!")
+                        try:
+                            os.remove(book_path)
+                            logger(f"Book {book} removed from splitted books\n")
+                        except FileNotFoundError:
+                            logger(f"Book {book} already moved from splitted books to done folder!\n")
+                            continue
+                        continue
+            logger(f"Book {book} done successfully!\n")
         else:
             fieldnames = ['Asar_nomi', 'Manbaa', 'Matn']
 
@@ -316,14 +318,19 @@ if __name__ == '__main__':
 
                 for new_text in final_text:
                     new_text = new_text.strip().replace("|", "")
-                    if len(new_text) == 0 or new_text == " " or new_text == "" or new_text is None:
+                    if new_text == " " or new_text == "" or new_text is None or len(new_text) < 6:
                         continue
-
-                    # Проверка, что новый текст не существует в существующих данных
                     text_exists = any(new_text in existing_text['Matn'] for existing_text in existing_data)
-
+                    title_exists = any(poem_title in existing_title['Asar_nomi'] for existing_title in existing_data)
                     if not text_exists:
-                        writer.writerow({"Asar_nomi": poem_title, "Manbaa": "www.ziyouz.com", "Matn": new_text})
-        print(f"{datetime.datetime.now()} - Book {book} done successfully!\n")
-    # except Exception as e:
-    #     print(e)
+                        writer.writerow({"Asar_nomi": poem_title, "Manbaa": "ziyonet.uz", "Matn": new_text})
+                    else:
+                        logger(f"Book {book} already exists in csv file!")
+                        try:
+                            os.remove(book_path)
+                            logger(f"Book {book} removed from splitted books\n")
+                        except FileNotFoundError:
+                            logger(f"Book {book} already moved from splitted books to done folder!\n")
+                            continue
+                        continue
+            logger(f"Book {book} done successfully!\n")
