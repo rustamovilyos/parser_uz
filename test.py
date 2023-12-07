@@ -47,8 +47,10 @@
 # dict1 = ast.literal_eval(data)
 #
 # print(dict1)
+import csv
 import glob
 import os
+
 
 # import os
 #
@@ -130,9 +132,42 @@ import os
 # books = os.listdir("books/splitted_book/")
 # for book in sorted(books):
 #     print(book)
-    # poem_title = os.path.splitext(book)[0]
-    # print(poem_title)
+# poem_title = os.path.splitext(book)[0]
+# print(poem_title)
 
-b = 'books/splitted_book/А.Навоий. Ғазал гулзоридан 100 оташин гул_fixed_group_4.pdf'
+# b = 'books/splitted_book/А.Навоий. Ғазал гулзоридан 100 оташин гул_fixed_group_4.pdf'
+#
+# print(os.path.basename(b)[:-4])
 
-print(os.path.basename(b)[:-4])
+# with open("dataset_3363_4 (2).txt", 'r') as reader, open("mid.txt", 'w') as writer:
+#     reader = reader.read().replace("\n", ';').split(";")
+#     result_dict = {}
+#     current_key = None
+#     student_mid = []
+#     # sum_list = []
+#     a = ''
+#     for item in reader:
+#         if item.isalpha():
+#             current_key = item
+#             result_dict[current_key] = []
+#         elif current_key is not None:
+#             result_dict[current_key].append(int(item))
+#     for key, value in result_dict.items():
+#         student_mid.append(sum(value) / 3)
+#     for i in student_mid:
+#         writer.write(str(i) + '\n')
+#
+#     sum_list = [0] * len(result_dict[key])
+#
+#     # Sum the corresponding elements at each index
+#     for key, value in result_dict.items():
+#         average_score = sum(value[0:3]) / 3
+#         # sum_list =
+#
+#     writer.write(str(sum_list) + ' ')
+    # for i in sum_list:
+
+    # writer.write(str(a / 3) + " ")
+
+# import this
+# print("Hello world from Python")
