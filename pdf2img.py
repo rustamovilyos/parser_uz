@@ -37,7 +37,7 @@ def check_to_img(file_path):
             print(f"Page {page + 1} has no images")
 
 
-def pdf_fixer(input_pdf):
+def sort_pdf(input_pdf):
     reader = PdfReader("books/renamed_books/" + input_pdf)
     try:
         print(f"Checking {input_pdf} file to images")
@@ -55,14 +55,14 @@ def pdf_fixer(input_pdf):
         print(f"PDF {input_pdf} file is scanned and moved to scanned_books folder\n\n")
 
 
-# pdf_fixer('books/renamed_books/Ов.pdf')
+# sort_pdf('books/renamed_books/Ов.pdf')
 
 # for pdf_book in sorted(os.listdir('books/renamed_books')):
-#     pdf_fixer(pdf_book)
+#     sort_pdf(pdf_book)
 
 
 def scan_pdf_fixer(input_pdf):
-    output_pdf = os.path.basename(input_pdf)[:-4] + "_fixed.pdf"
+    output_pdf = os.path.basename(input_pdf)[:-4] + ".pdf"
     output_pdf_1 = f'books/fixed_books/{output_pdf}'
     print(f"Output file: {output_pdf_1}")
 
@@ -77,5 +77,5 @@ def scan_pdf_fixer(input_pdf):
 
 # scan_pdf_fixer("books/Бу дунёда ўлиб бўлмайди_group_2.pdf")
 
-# for pdf_book in glob.glob('books/*.pdf'):
+# for pdf_book in glob.glob('books/splitted_book/*.pdf'):
 #     scan_pdf_fixer(pdf_book)
