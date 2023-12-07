@@ -28,5 +28,6 @@ def pdf_splitter(path):
 
 
 # if __name__ == '__main__':
-#     for pdf_book in glob.glob('books/books_to_parse/*.pdf'):
+#     for pdf_book in sorted(glob.glob('books/books_to_parse/*.pdf')):
+#         print(f"\nSplitting {pdf_book} file to groups \n")
 #         pdf_splitter(pdf_book)
