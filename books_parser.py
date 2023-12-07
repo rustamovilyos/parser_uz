@@ -44,9 +44,9 @@ def is_cyrillic_uzbek(text):
 def check_to_img(file_path):
     reader = PdfReader(file_path)
     image_path = "Pdf2img"
-    try:
-        for page in range(len(reader.pages)):
-            logger(f"parsing page {page + 1}")
+    for page in range(len(reader.pages)):
+        logger(f"parsing page {page + 1}")
+        try:
             if reader.pages[page].images:
                 logger(f"Page {page + 1} has images")
                 images = convert_from_path(file_path)
@@ -66,8 +66,9 @@ def check_to_img(file_path):
                 logger("page text forwarded to DocumentReader 2!")
         # all_text = ''.join(collector_list)
         # DocumentParser(all_text)
-    except Exception as e:
-        logger(f"Error in check_to_img: {e}")
+        except Exception as e:  # NotImplementedError - если файл сканер, то он не может быть прочитан
+            logger(f"Error in check_to_img: {e}")
+            continue
 
 
 class CheckFirstToImg:
@@ -263,7 +264,7 @@ class JoinToStr:
 
 if __name__ == '__main__':
     books_list = os.listdir("books/splitted_book/")
-    csv_file = "data/e-book.csv"
+    csv_file = "data/correct_data/e-book.csv"
     for book in sorted(books_list):
         poem_title = os.path.splitext(book)[0]
         files = glob.glob(f'Pdf2img/*')
@@ -292,12 +293,12 @@ if __name__ == '__main__':
                         except IndexError:
                             writer.writerow(
                                 {"Asar_nomi": poem_title, "Manbaa": "ziyonet.uz", "Matn": result})
-                        logger(f"Book {book} already exists in csv file!")
+                        print(f"Book {book} already exists in csv file!")
                         try:
                             os.remove(book_path)
                             logger(f"Book {book} removed from splitted books\n")
                         except FileNotFoundError:
-                            logger(f"Book {book} already moved from splitted books to done folder!\n")
+                            print(f"Book {book} already moved from splitted books to done folder!\n")
                             continue
                         continue
             logger(f"Book {book} done successfully!\n")
@@ -325,12 +326,12 @@ if __name__ == '__main__':
                     if not text_exists:
                         writer.writerow({"Asar_nomi": poem_title, "Manbaa": "ziyonet.uz", "Matn": new_text})
                     else:
-                        logger(f"Book {book} already exists in csv file!")
+                        print(f"Book {book} already exists in csv file!")
                         try:
                             os.remove(book_path)
                             logger(f"Book {book} removed from splitted books\n")
                         except FileNotFoundError:
-                            logger(f"Book {book} already moved from splitted books to done folder!\n")
+                            print(f"Book {book} already moved from splitted books to done folder!\n")
                             continue
                         continue
             logger(f"Book {book} done successfully!\n")
