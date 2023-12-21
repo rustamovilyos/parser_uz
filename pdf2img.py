@@ -24,7 +24,7 @@ def pdf2img2txt(pdf_path):
     return all_images_to_string(images_path)
 
 
-# pdf2img2txt("books/scanned_books/Михаил Лермантов Замонамиз қаҳрамони.pdf")
+# pdf2img2txt("books/scanned_books/")
 
 def check_to_img(file_path):
     reader = PdfReader(file_path)
