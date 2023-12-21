@@ -22,22 +22,17 @@ def logger(printing):
     return logger
 
 
-def is_latin_uzbek(text):
-    latin_uzbek_letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    for char in text:
-        if char in latin_uzbek_letters:
-            return True
-        else:
-            return False
+def to_latin(text):
+    import requests
 
+    url = f"https://korrektor.manu.uz/transliterate?alphabet=latin&{text}"
 
-def is_cyrillic_uzbek(text):
-    cyrillic_uzbek_letters = "абвгғдеёжзийкқлмнопрстуфхцчшъыьэюяҳАБВГҒДЕЁЖЗИЙКҚЛМНОПРСТУФХЦЧШЪЫЬЭЮЯҲ"
-    for char in text:
-        if char in cyrillic_uzbek_letters:
-            return True
-        else:
-            return False
+    payload = {}
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    return response.json()['result']
 
 
 # Класс для проверки на изображение (только первая страница)
@@ -168,77 +163,78 @@ class DocumentParser:
             if len(words) == 0 or words == " " or words == "" or words is None or len(words) < 6:
                 continue
             else:
-                if is_latin_uzbek(words):
-                    extended.append(words.strip())
-                elif is_cyrillic_uzbek(words):
-                    res = TranslateToLatin().split_words(words.strip())
-                    extended.append(res)
+                # if is_latin_uzbek(words):
+                #     extended.append(words.strip())
+                # elif is_cyrillic_uzbek(words):
+                #     res = TranslateToLatin().split_words(words.strip())
+                #     extended.append(res)
+                extended.append(to_latin(words.strip()))
 
 
 # Переводит с кириллицы на латиницу:
-class TranslateToLatin:
-    def __init__(self):
-        self.text_list = []
-        self.list_1 = []
-        self.latin_text_str = ''  # сохраняет переведенный в латиницу текст.
-        self.t = Transliterator(to=WritingType.LAT)  # переводит кириллицу в латиницу
-
-    # Собираем все переведенные слова из списков
-    def sum(self):
-        for sum in self.text_list:
-            self.list_1.extend(self.text_list)
-            return self.list_1
-
-    def split_words(self, word):
-        try:
-            if word == '' or word == [] or len(new_text) < 5:
-                pass
-            else:
-                # for word in text:  # Цикл с условием если слово путой str, то это слово пропускают
-                if word[0].isalpha():  # Если 1 индекс в слове это буква
-                    if word[-1:].isalpha():  # Если последний индекс слова это буква, то слово переводится.
-                        self.text_list.append(self.t.convert(word))
-                    else:  # Если последний индекс слова, не буква, а знак, то:
-                        new_word = f'{self.t.convert(word[:-1])}{word[-1:]}'  # Переводим слово в латиницу, без
-                        # последнего знака и сразу добавляем исключенный знак, после перевода.
-                        self.text_list.append(new_word)
-                elif not word[0].isalpha() and (not word[0].isdigit()):  # Если 1 индекс это символ
-                    if word[1].isalpha():  # Если 2 индекс это буква
-                        try:
-                            if word[-1:].isalpha:  # Если Последный индекс это буква
-                                new_word = f'{word[:1]}{self.t.convert(word[1:])}'  # Переводим слово в латиницу, без
-                                # первого знака и сразу добавляем исключенный знак, после перевода.
-                                self.text_list.append(new_word)
-                            else:  # Если последний индекс символ
-                                self.t.convert(word[1:-1])
-                                new_word = f'{word[:1]}{self.t.convert(word[1:-1])}{word[-1:]}'  # Переводим слово в
-                                # латиницу, без первого знака и последнего занка, сразу добавляем исключенные знаки,
-                                # после перевода.
-                                self.text_list.append(new_word)
-                        except Exception as e:  # При возникновении ошибки: легче сделать так дэ.
-                            new_word = f'{word[:1]}{self.t.convert(word[1:-1])}{word[-1:]}'
-                            self.text_list.append(new_word)
-                            logger(f"Error in split_words: {e}")
-                    else:  # Если первый индекс слова, не буква, то принтуем в терминал,
-                        self.text_list.append(word)
-                elif word[0].isdigit():  # Если внутри обрезанного слова есть, цифра, то находим цифру и переводим слово
-                    # без нее
-                    collector_list = []  # Для обрезки слов, если в ней есть цифра.
-                    for each_symbol in word:  # Отделяем каждый символ в слове
-                        if each_symbol.isdigit():  # Проверяем, если этот символ цифра, то сохраняем в список коллерктор
-                            collector_list.append(each_symbol)
-                        elif each_symbol.isalpha():  # Если этот символ буква, то переводим букву в латиницу и
-                            # записываем в коллектор переведенную букву.
-                            translated_sym = self.t.convert(each_symbol)
-                            collector_list.append(translated_sym)
-                        else:  # Если этот символ, что-то другое, то добавляем его в коллектор без изменений
-                            collector_list.append(each_symbol)
-                    collector_txt = ''.join(collector_list)  # Перевеодим слово обратно в str
-                    self.text_list.append(collector_txt)  # Добавляем слово в общий список
-        except IndexError as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
-            if str(e) == "string index out of range":
-                self.text_list.append(word)
-        return self.sum()
+# class TranslateToLatin:
+#     def __init__(self):
+#         self.text_list = []
+#         self.list_1 = []
+#         self.latin_text_str = ''  # сохраняет переведенный в латиницу текст.
+#         self.t = Transliterator(to=WritingType.LAT)  # переводит кириллицу в латиницу
+#
+#     # Собираем все переведенные слова из списков
+#     def sum(self):
+#         for sum in self.text_list:
+#             self.list_1.extend(self.text_list)
+#             return self.list_1
+#
+#     def split_words(self, word):
+#         try:
+#             if word == '' or word == [] or len(new_text) < 5:
+#                 pass
+#             else:
+#                 # for word in text:  # Цикл с условием если слово путой str, то это слово пропускают
+#                 if word[0].isalpha():  # Если 1 индекс в слове это буква
+#                     if word[-1:].isalpha():  # Если последний индекс слова это буква, то слово переводится.
+#                         self.text_list.append(self.t.convert(word))
+#                     else:  # Если последний индекс слова, не буква, а знак, то:
+#                         new_word = f'{self.t.convert(word[:-1])}{word[-1:]}'  # Переводим слово в латиницу, без
+#                         # последнего знака и сразу добавляем исключенный знак, после перевода.
+#                         self.text_list.append(new_word)
+#                 elif not word[0].isalpha() and (not word[0].isdigit()):  # Если 1 индекс это символ
+#                     if word[1].isalpha():  # Если 2 индекс это буква
+#                         try:
+#                             if word[-1:].isalpha:  # Если Последный индекс это буква
+#                                 new_word = f'{word[:1]}{self.t.convert(word[1:])}'  # Переводим слово в латиницу, без
+#                                 # первого знака и сразу добавляем исключенный знак, после перевода.
+#                                 self.text_list.append(new_word)
+#                             else:  # Если последний индекс символ
+#                                 self.t.convert(word[1:-1])
+#                                 new_word = f'{word[:1]}{self.t.convert(word[1:-1])}{word[-1:]}'  # Переводим слово в
+#                                 # латиницу, без первого знака и последнего занка, сразу добавляем исключенные знаки,
+#                                 # после перевода.
+#                                 self.text_list.append(new_word)
+#                         except Exception as e:  # При возникновении ошибки: легче сделать так дэ.
+#                             new_word = f'{word[:1]}{self.t.convert(word[1:-1])}{word[-1:]}'
+#                             self.text_list.append(new_word)
+#                             logger(f"Error in split_words: {e}")
+#                     else:  # Если первый индекс слова, не буква, то принтуем в терминал,
+#                         self.text_list.append(word)
+#                 elif word[0].isdigit():  # Если внутри обрезанного слова есть, цифра, то находим цифру и переводим слово
+#                     # без нее
+#                     collector_list = []  # Для обрезки слов, если в ней есть цифра.
+#                     for each_symbol in word:  # Отделяем каждый символ в слове
+#                         if each_symbol.isdigit():  # Проверяем, если этот символ цифра, то сохраняем в список коллерктор
+#                             collector_list.append(each_symbol)
+#                         elif each_symbol.isalpha():  # Если этот символ буква, то переводим букву в латиницу и
+#                             # записываем в коллектор переведенную букву.
+#                             translated_sym = self.t.convert(each_symbol)
+#                             collector_list.append(translated_sym)
+#                         else:  # Если этот символ, что-то другое, то добавляем его в коллектор без изменений
+#                             collector_list.append(each_symbol)
+#                     collector_txt = ''.join(collector_list)  # Перевеодим слово обратно в str
+#                     self.text_list.append(collector_txt)  # Добавляем слово в общий список
+#         except IndexError as e:  # Ошибка в индексах (если слово состоит из 1 символа и это не буква)
+#             if str(e) == "string index out of range":
+#                 self.text_list.append(word)
+#         return self.sum()
 
 
 class JoinToStr:
