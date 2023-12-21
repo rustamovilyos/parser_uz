@@ -49,8 +49,11 @@
 # print(dict1)
 import csv
 import glob
+import json
 import os
+import time
 
+import requests
 
 # import os
 #
@@ -171,3 +174,71 @@ import os
 
 # import this
 # print("Hello world from Python")
+
+# url = "http://korrektor.manu.uz/spellcheck"
+# with open('data/correct_data/new_data.csv', 'r') as f:
+#     reader = csv.reader(f, delimiter='|')
+#     next(reader)  # Skip the header row
+#     for txt_id, row in enumerate(reader):
+#         if 22654 < txt_id:
+#             print(f"Checking sentence >> {row[2]}")
+#         else:
+#             continue
+
+# with open('data/json_data/words_2.json', 'r') as read_json:
+#     data = json.load(read_json)
+#     for a in data[-2]:
+#         print(a)
+#         print(data[-2][a])
+#         print('\n')
+
+# import json
+#
+# # Load the JSON file
+# with open('data/json_data/test.json', 'r') as file:
+#     data = json.load(file)
+#
+# # Create a list to store unique names
+# unique_names = set()
+#
+# # Filter the data to keep only entries with unique names
+# filtered_data = []
+#
+# # Convert the list of dictionaries into a single dictionary
+# merged_data = {}
+# for item in data:
+#     for key, value in item.items():
+#         merged_data[key] = value
+#
+# # Convert the merged dictionary back to a list of dictionaries
+# result = [{key: value} for key, value in merged_data.items()]
+#
+# # Print the result
+# print(result)
+# for item in data:
+#     for i in item.keys():
+#         ke = item[i]['result'].keys()
+#         for key in ke:
+#             if key not in unique_names:
+#                 filtered_data.append(item)
+#                 # unique_names.add(key)
+#             else:
+#                 continue
+#
+# # Write the filtered data back to a JSON file
+# with open('data/json_data/test1.json', 'w') as file:
+#     json.dump(filtered_data, file, indent=2)
+# import re
+#
+#
+# def split_sentences(text):
+#     # Используем регулярное выражение для разделения предложений по знакам препинания ".!?"
+#     sentences = re.split(r'(?<=[.!?])\s+', text)
+#     return sentences
+#
+#
+# # Пример использования
+# text = "Как дела? Я надеюсь, что у тебя всё хорошо Увидимся вечером"
+# sentences = split_sentences(text)
+# for sentence in sentences:
+#     print(sentence)
