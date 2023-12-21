@@ -24,7 +24,7 @@ def pdf2img2txt(pdf_path):
     return all_images_to_string(images_path)
 
 
-# pdf2img2txt('books/fixed_books/Одил Ёқубов Улуғбек ҳазинаси-1-6_fixed.pdf')
+# pdf2img2txt("books/scanned_books/Михаил Лермантов Замонамиз қаҳрамони.pdf")
 
 def check_to_img(file_path):
     reader = PdfReader(file_path)
@@ -75,7 +75,7 @@ def scan_pdf_fixer(input_pdf):
     print("PDF file has been fixed")
 
 
-# scan_pdf_fixer("books/Бу дунёда ўлиб бўлмайди_group_2.pdf")
+# scan_pdf_fixer("books/books_to_parse/Ikki eshik orasi.pdf")
 
 # for pdf_book in glob.glob('books/splitted_book/*.pdf'):
 #     scan_pdf_fixer(pdf_book)
